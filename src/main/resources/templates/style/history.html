@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>История поездок</title>
+</head>
+<body>
+<h1>История поездок</h1>
+
+<table border="1">
+    <tr>
+        <th>Велосипед</th>
+        <th>Станция отправления</th>
+        <th>Станция прибытия</th>
+        <th>Начало</th>
+        <th>Окончание</th>
+    </tr>
+    <tr th:each="trip : ${history}">
+        <td th:text="${trip.bike.id}">Bike ID</td>
+        <td th:text="${trip.startStation.name}">Старт</td>
+        <td th:text="${trip.endStation != null ? trip.endStation.name : 'В пути'}">Финиш</td>
+        <td th:text="${trip.startTime}">Старт</td>
+        <td th:text="${trip.endTime != null ? trip.endTime : 'В пути'}">Финиш</td>
+    </tr>
+    <tr th:if="${history == null or #lists.isEmpty(history)}">
+        <td colspan="5">Нет поездок</td>
+    </tr>
+</table>
+
+<br>
+<a href="/profile/settings">Назад</a>
+</body>
+</html>

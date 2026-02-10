@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Добро пожаловать!</title>
+    <style>
+        body {
+            font-family: Inter, sans-serif;
+            background-color: #28566E;
+            color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #264455;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            padding: 30px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #FFFFFF;
+            margin-bottom: 20px;
+        }
+
+        p {
+            margin-bottom: 25px;
+            font-size: 18px;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #FFFFFF;
+            color: #000000;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #E0E0E0;
+        }
+
+        .logo {
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">BikeShare</div>
+        <h1>Добро пожаловать!</h1>
+        <p>Вы успешно вошли в систему.</p>
+        <div style="display: flex; gap: 10px;">
+            <a href="/map" class="btn">Перейти к карте</a>
+            <a href="/profile" class="btn">Личный кабинет</a>
+        </div>
+    </div>
+</body>
+</html>

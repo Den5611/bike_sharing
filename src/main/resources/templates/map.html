@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Карта велосипедов</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKUjq_HQjMsoySeYckCfJrfPD05CSjMAs&callback=initMap" async defer></script>
+    <link rel="stylesheet" href="https://style.map.css">
+    <style>
+        #trip-info {
+            display: none;
+            border: 1px solid #000;
+            padding: 10px;
+            margin-top: 10px;
+            width: 300px;
+            background-color: #28566E;
+        }
+        body {
+            font-family: Inter, sans-serif;
+            background-color: #28566E;
+            color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #264455;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            padding: 30px;
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+        }
+        h2, h3 {
+            color: #FFFFFF;
+        }
+        button, .btn {
+            display: inline-block;
+            background-color: #FFFFFF;
+            color: #000000;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover, .btn:hover {
+            background-color: #E0E0E0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #264455;
+            color: #fff;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            text-align: center;
+        }
+        #map {
+            height: 600px;
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .header {
+             display: flex; /* заменили inline-flex на flex */
+             justify-content: space-between;
+             align-items: center;
+             padding: 10px 20px;
+             background-color: #264455;
+             border-radius: 10px;
+             margin-bottom: 20px;
+             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+             width: 100%; /* занимает всю ширину */
+             box-sizing: border-box; /* чтобы padding не увеличивал ширину */
+         }
+
+        .logo{
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFFFFF;
+        }
+        .nav-links{
+            display: flex;
+            gap: 20px;
+        }
+        .nav-link{
+            color: #FFFFFF;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="logo">BikeShare</div>
+    <div class="nav-links">
+        <a href="/map" class="nav-link">Карта</a>
+        <a href="/profile" class="nav-link">Личный кабинет</a>
+        <a href="/logout" class="nav-link">Выйти</a>
+    </div>
+</div>
+
+<button onclick="toggleTripInfo()">Активная аренда</button>
+
+<div id="trip-info">
+    <h3>🚲 Активная аренда</h3>
+    <p><strong>Велосипед ID:</strong> <span id="bikeId"></span></p>
+    <p><strong>Начало аренды:</strong> <span id="startDate"></span> <span id="startTime"></span></p>
+    <p><strong>Прошло минут:</strong> <span id="duration"></span></p>
+    <p><strong>Стоимость:</strong> <span id="cost"></span> ₽</p>
+    <form method="post" action="/api/trips/return">
+        <input type="hidden" name="userId" value="1"/> <!-- Заменить на актуального пользователя -->
+        <button type="submit">Завершить аренду</button>
+    </form>
+</div>
+
+<div id="map" style="height: 600px; width: 100%; margin-top: 10px;"></div>
+
+<h3>Список велосипедов</h3>
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Станция</th>
+        <th>Действие</th>
+    </tr>
+    </thead>
+    <tbody id="bike-list">
+    <!-- строки с кнопками добавит JS -->
+    </tbody>
+</table>
+
+<script>
+    let map;
+
+    function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: 55.751244, lng: 37.618423 },
+            zoom: 12,
+            styles:[
+                {
+                    "featureType": "water",
+                    "elementType": "geometry",
+                    "stylers": [
+                        {
+                            "color": "#193341"
+                        }
+                    ]
+                },
+                {
+                    "featureType": "landscape",
+                    "elementType": "geometry",
+                    "stylers": [
+                        {
+                            "color": "#2c5a71"
+                        }
+                    ]
+                },
+                {
+                    "featureType": "road",
+                    "elementType": "geometry",
+                    "stylers": [
+                        {
+                            "color": "#29768a"
+                        },
+                        {
+                            "lightness": -37
+                        }
+                    ]
+                },
+                {
+                    "featureType": "poi",
+                    "elementType": "geometry",
+                    "stylers": [
+                        {
+                            "color": "#406d80"
+                        }
+                    ]
+                },
+                {
+                    "featureType": "transit",
+                    "elementType": "geometry",
+                    "stylers": [
+                        {
+                            "color": "#406d80"
+                        }
+                    ]
+                },
+                {
+                    "elementType": "labels.text.stroke",
+                    "stylers": [
+                        {
+                            "visibility": "on"
+                        },
+                        {
+                            "color": "#3e606f"
+                        },
+                        {
+                            "weight": 2
+                        },
+                        {
+                            "gamma": 0.84
+                        }
+                    ]
+                },
+                {
+                    "elementType": "labels.text.fill",
+                    "stylers": [
+                        {
+                            "color": "#ffffff"
+                        }
+                    ]
+                },
+                {
+                    "featureType": "administrative",
+                    "elementType": "geometry",
+                    "stylers": [
+                        {
+                            "weight": 0.6
+                        },
+                        {
+                            "color": "#1a3541"
+                        }
+                    ]
+                },
+                {
+                    "elementType": "labels.icon",
+                    "stylers": [
+                        {
+                            "visibility": "off"
+                        }
+                    ]
+                },
+                {
+                    "featureType": "poi.park",
+                    "elementType": "geometry",
+                    "stylers": [
+                        {
+                            "color": "#2c5a71"
+                        }
+                    ]
+                }
+            ],
+
+        });
+
+        fetch('/stations')
+            .then(response => response.json())
+            .then(stations => {
+                stations.forEach(station => {
+                    new google.maps.Marker({
+                        position: { lat: station.latitude, lng: station.longitude },
+                        map: map,
+                        title: station.name,
+                        icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+                    });
+                });
+            });
+
+        fetch('/bikes')
+            .then(response => response.json())
+            .then(bikes => {
+                console.log(bikes); // Добавлено для отладки
+                const bikeList = document.getElementById("bike-list");
+                bikes.forEach(bike => {
+                    if (bike.latitude && bike.longitude) {
+                        new google.maps.Marker({
+                            position: { lat: bike.latitude, lng: bike.longitude },
+                            map: map,
+                            title: "Bike ID: " + bike.id,
+                            icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
+                        });
+                    }
+
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                <td>${bike.id}</td>
+                <td>${bike.station?.name || 'Нет на станции'}</td>
+                <td>
+                    <form action="/api/trips/rent" method="post">
+                        <input type="hidden" name="bikeId" value="${bike.id}" />
+                        <input type="hidden" name="userId" value="1" />
+                        <button type="submit">Арендовать</button>
+                    </form>
+                </td>
+            `;
+                    bikeList.appendChild(row);
+                });
+            });
+
+    }
+
+    function toggleTripInfo() {
+        const tripInfo = document.getElementById("trip-info");
+        if (tripInfo.style.display === "none") {
+            fetchActiveTrip();
+            tripInfo.style.display = "block";
+        } else {
+            tripInfo.style.display = "none";
+        }
+    }
+
+    async function fetchActiveTrip() {
+        try {
+            const response = await fetch("/api/trips/active?userId=1");
+            const text = await response.text();
+
+            if (text === "Нет активной аренды") {
+                document.getElementById("trip-info").innerHTML = "<p>Нет активной аренды</p>";
+                return;
+            }
+
+            const trip = JSON.parse(text);
+            const startTime = new Date(trip.startTime);
+            const now = new Date();
+            const duration = Math.floor((now - startTime) / 60000);
+            const cost = duration * 4;
+
+            document.getElementById("bikeId").textContent = trip.bike.id;
+            document.getElementById("startDate").textContent = startTime.toLocaleDateString();
+            document.getElementById("startTime").textContent = startTime.toLocaleTimeString();
+            document.getElementById("duration").textContent = duration;
+            document.getElementById("cost").textContent = cost;
+        } catch (err) {
+            console.error("Ошибка при получении аренды:", err);
+        }
+    }
+
+    window.onload = initMap;
+</script>
+</body>
+</html>
